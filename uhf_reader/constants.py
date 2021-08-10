@@ -1,0 +1,5 @@
+# reader defined commands
+GET_FIRMWARE_VERSION = '0aff0222d3'
+CLEAR_READER_BUFFER = '0aff0244b1'
+SCAN_FOR_TAGS = '0aff03800074'
+GET_TAG_DATA = '0aff034110a3'
