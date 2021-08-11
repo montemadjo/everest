@@ -8,6 +8,9 @@ import binascii
 
 
 def producer(out_q, reader):
+    """
+    Jajara
+    """
     while True:
         # produce some data
         clr = reader.clear_reader_buffer()
