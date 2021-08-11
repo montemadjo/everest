@@ -1,6 +1,7 @@
 import socket
 from uhf_reader.constants import GET_FIRMWARE_VERSION, CLEAR_READER_BUFFER, SCAN_FOR_TAGS, GET_TAG_DATA
 
+
 class UHFReader:
     """
     UHF reader MR6211E
@@ -31,7 +32,7 @@ class UHFReader:
             self.connection.close()
         except Exception as ex:
             raise NetworkException("Failed to disconnect: " + str(ex))
-        
+
     def get_firmware_version(self) -> bytes:
         try:
             message = bytes.fromhex(GET_FIRMWARE_VERSION)
@@ -39,7 +40,8 @@ class UHFReader:
             data = self.connection.recv(self.buffer_size)
             return data
         except Exception as ex:
-            raise Exception("Cannot proccess command get_firmware_version" + str(ex))
+            raise Exception(
+                "Cannot proccess command get_firmware_version" + str(ex))
 
     def clear_reader_buffer(self) -> bytes:
         try:
@@ -48,13 +50,25 @@ class UHFReader:
             data = self.connection.recv(self.buffer_size)
             return data
         except Exception as ex:
-            raise Exception("Cannot proccess command clear_reader_buffer" + str(ex))
+            raise Exception(
+                "Cannot proccess command clear_reader_buffer" + str(ex))
 
     def scan_for_tags(self) -> bytes:
         try:
             message = bytes.fromhex(SCAN_FOR_TAGS)
             self.connection.send(message)
             data = self.connection.recv(self.buffer_size)
-            return data
+            segment = data[5:6]
+            return segment
         except Exception as ex:
             raise Exception("Cannot proccess command scan_for_tags" + str(ex))
+
+    def get_tag_data(self) -> bytes:
+        try:
+            message = bytes.fromhex((GET_TAG_DATA))
+            self.connection.send(message)
+            data = self.connection.recv(self.buffer_size)
+            segment = data[7:19]
+            return segment
+        except Exception as ex:
+            raise Exception(("Cannot proccess command get_tag_data" + str(ex)))
