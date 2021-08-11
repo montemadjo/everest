@@ -24,8 +24,12 @@ def producer(out_q, reader):
 
 
 def consumer(in_q):
+    i = 0
     while True:
         data = in_q.get()
+        i += 1
+        print(i)
+        time.sleep(1)
         print(binascii.hexlify((bytearray(data))))
 
 
