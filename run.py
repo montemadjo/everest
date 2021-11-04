@@ -5,11 +5,9 @@ import time
 import binascii
 
 # a thread that produces data
-
-
 def producer(out_q, reader):
     """
-    Jajara
+    Producer
     """
     while True:
         # produce some data
@@ -21,28 +19,35 @@ def producer(out_q, reader):
             # else:
             tag = reader.get_tag_data()
             out_q.put(binascii.hexlify(bytearray(tag)))
-        time.sleep(0.1)
+        time.sleep(0.025)
+        reader.set_output1(True)
+        time.sleep(0.025)
+        reader.set_output1(False)
+
+        # ovdje treba da se stavi nešto kao
+        # semafor_commander.scan_for_command()
+        # i da se poziva na spoljnu komandu za upravljanje semaforom
 
 # a thread that consumes data
-
-
 def consumer(in_q):
     i = 0
     while True:
         data = in_q.get()
         i += 1
         print(i)
-        time.sleep(1)
         print(binascii.hexlify((bytearray(data))))
 
+        time.sleep(1)
 
 if __name__ == '__main__':
-    reader = UHFReader('192.168.1.200', 100)
+    reader = UHFReader('192.168.1.153', 100)
     reader.connect()
 
     data = reader.get_firmware_version()
 
     print("podaci: " + str(data))
+
+    # reader.disconnect()
 
     # start scanning for tags
     try:
@@ -55,7 +60,7 @@ if __name__ == '__main__':
 
     except Exception as ex:
         reader.disconnect()
-        raise Exception(("Jajara"))
+        raise Exception(("Something broke: " + str(ex)))
 
     # while True:
     #     clr = reader.clear_reader_buffer()
