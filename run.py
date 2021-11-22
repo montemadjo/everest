@@ -1,8 +1,16 @@
 from uhf_reader import UHFReader
 from queue import Queue
 from threading import Thread
+import zmq
+import logging
 import time
 import binascii
+import json
+
+REQUEST_TIMEOUT = 2500
+REQUEST_RETRIES = 10
+SERVER_ENDPOINT = "tcp://localhost:5555"
+logging.basicConfig(format="%(levelname)s: %(message)s", level=logging.INFO)
 
 # a thread that produces data
 def producer(out_q, reader):
@@ -35,13 +43,34 @@ def consumer(in_q):
         data = in_q.get()
         i += 1
         print(i)
-        print(binascii.hexlify((bytearray(data))))
+        card = binascii.hexlify((bytearray(data)))
+        print(card)
 
-        time.sleep(1)
+        # Data to be written 
+        data = {
+            "uhf": {
+                "id": 1,
+                "password": 21,
+                "command": "card read"
+            },
+            "card": card.decode("utf-8") 
+        }
+
+        message = json.dumps(data)
+        client.send_string(message)
+        reply = client.recv()
+        logging.info(reply)
+        # time.sleep(1)
 
 if __name__ == '__main__':
     reader = UHFReader('192.168.1.153', 100)
     reader.connect()
+
+    # zmq context
+    context = zmq.Context()
+    logging.info("connecting to server...")
+    client = context.socket(zmq.REQ)
+    client.connect(SERVER_ENDPOINT)
 
     data = reader.get_firmware_version()
 
