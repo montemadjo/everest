@@ -104,4 +104,4 @@ if __name__ == '__main__':
 
     # reader.disconnect()
 
-    print("goodbye!")
+    print("started!")
