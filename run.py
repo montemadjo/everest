@@ -34,6 +34,7 @@ def producer(out_q, r_q, reader):
         except: # queue here refers to the module, not a class
             pass
 
+        # if card is succesfully read wait for other cards
         if reader.activate_output_0_flag is True or reader.activate_output_1_flag is True or reader.activate_output_2_flag:
             reader.count -= 1
             print(reader.count)
