@@ -13,7 +13,7 @@ SERVER_ENDPOINT = "tcp://localhost:5555"
 logging.basicConfig(format="%(levelname)s: %(message)s", level=logging.INFO)
 
 # a thread that produces data
-def producer(out_q, reader):
+def producer(out_q, r_q, reader):
     """
     Producer
     """
@@ -21,23 +21,56 @@ def producer(out_q, reader):
         # produce some data
         clr = reader.clear_reader_buffer()
         tgs = reader.scan_for_tags()
+
+        try:
+            data = r_q.get(False,1)
+            if data == "TURN_LIGHT_0":
+                reader.set_output0(True)
+            elif data == "TURN_LIGHT_1":
+                reader.set_output1(True)
+            elif data == "TURN_LIGHT_2":
+                reader.set_output2(True)
+
+        except: # queue here refers to the module, not a class
+            pass
+
+        if reader.activate_output_0_flag is True or reader.activate_output_1_flag is True or reader.activate_output_2_flag:
+            reader.count -= 1
+            print(reader.count)
+
+        # counter is about to expire
+        if reader.count < 20:
+            if reader.count % 2 == 0:
+                reader.set_output0(True, False)
+                reader.set_output1(True, False)
+                reader.set_output2(True, False)
+            else:
+                reader.set_output0(False, False)
+                reader.set_output1(False, False)
+                reader.set_output2(False, False)
+
+
+        # counter expired.
+        if reader.count == 0:
+            reader.count = 200    
+            reader.set_output0(False)
+            reader.set_output1(False)
+            reader.set_output2(False)
+
         # wheather the result is 00 or 01
         if tgs is not b'\x00':
             #     print(binascii.hexlify(bytearray(tgs)))
             # else:
             tag = reader.get_tag_data()
             out_q.put(binascii.hexlify(bytearray(tag)))
-        time.sleep(0.025)
-        reader.set_output1(True)
-        time.sleep(0.025)
-        reader.set_output1(False)
+        time.sleep(0.05)
 
         # ovdje treba da se stavi nešto kao
         # semafor_commander.scan_for_command()
         # i da se poziva na spoljnu komandu za upravljanje semaforom
 
 # a thread that consumes data
-def consumer(in_q):
+def consumer(in_q, r_q):
     i = 0
     while True:
         data = in_q.get()
@@ -59,12 +92,24 @@ def consumer(in_q):
         message = json.dumps(data)
         client.send_string(message)
         reply = client.recv()
+        if reply == b'VEHICLE card found, turn up light 0!':
+            r_q.put("TURN_LIGHT_0")
+        elif reply == b'EMPLOYEE card found, turn up light 1!':
+            r_q.put("TURN_LIGHT_1")
+        elif reply == b'ROUTE card found, turn up light 2!':
+            r_q.put("TURN_LIGHT_2")
+        elif reply == b'card found, open gate!':
+            r_q.put("TURN_ALL_LIGHTS")
+
         logging.info(reply)
         # time.sleep(1)
 
 if __name__ == '__main__':
     reader = UHFReader('192.168.1.153', 100)
     reader.connect()
+    reader.set_output0(False)
+    reader.set_output1(False)
+    reader.set_output2(False)
 
     # zmq context
     context = zmq.Context()
@@ -81,8 +126,9 @@ if __name__ == '__main__':
     # start scanning for tags
     try:
         q = Queue()
-        t1 = Thread(target=producer, args=(q, reader))
-        t2 = Thread(target=consumer, args=(q, ))
+        r_q = Queue()
+        t1 = Thread(target=producer, args=(q, r_q, reader))
+        t2 = Thread(target=consumer, args=(q, r_q ))
 
         t1.start()
         t2.start()

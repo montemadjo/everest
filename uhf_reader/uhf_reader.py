@@ -15,6 +15,10 @@ class UHFReader:
     def __init__(self, host, port):
         self.port = port
         self.host = host
+        self.count = 200
+        self.activate_output_0_flag = False
+        self.activate_output_1_flag = False
+        self.activate_output_2_flag = False
 
     def connect(self) -> None:
         try:
@@ -73,17 +77,56 @@ class UHFReader:
         except Exception as ex:
             raise Exception(("Cannot proccess command get_tag_data: " + str(ex)))
 
-    def set_output1(self, level) -> bytes:
+    def set_output0(self, level, deactivate = True) -> bytes:
         try:
             if level is False:
-                message = bytes.fromhex((SET_OUT1_HIGH))
+                if deactivate:
+                    self.activate_output_0_flag = False
+                message = bytes.fromhex((SET_OUT0_LOW))
                 self.connection.send(message)
                 data = self.connection.recv(self.buffer_size)
                 return data
             else:
-                message = bytes.fromhex((SET_OUT1_LOW))
+                self.activate_output_0_flag = True
+                message = bytes.fromhex((SET_OUT0_HIGH))
                 self.connection.send(message)
                 data = self.connection.recv(self.buffer_size)
                 return data
         except Exception as ex:
-            raise Exception(("Cannot proccess command set_output_high: " + str(ex)))
+            raise Exception(("Cannot proccess command set_output_0: " + str(ex)))
+
+    def set_output1(self, level, deactivate = True) -> bytes:
+        try:
+            if level is False:
+                if deactivate:
+                    self.activate_output_1_flag = False
+                message = bytes.fromhex((SET_OUT1_LOW))
+                self.connection.send(message)
+                data = self.connection.recv(self.buffer_size)
+                return data
+            else:
+                self.activate_output_1_flag = True
+                message = bytes.fromhex((SET_OUT1_HIGH))
+                self.connection.send(message)
+                data = self.connection.recv(self.buffer_size)
+                return data
+        except Exception as ex:
+            raise Exception(("Cannot proccess command set_output_1: " + str(ex)))
+
+    def set_output2(self, level, deactivate = True) -> bytes:
+        try:
+            if level is False:
+                if deactivate:
+                    self.activate_output_2_flag = False
+                message = bytes.fromhex((SET_RELEY_LOW))
+                self.connection.send(message)
+                data = self.connection.recv(self.buffer_size)
+                return data
+            else:
+                self.activate_output_2_flag = True
+                message = bytes.fromhex((SET_RELEY_HIGH))
+                self.connection.send(message)
+                data = self.connection.recv(self.buffer_size)
+                return data
+        except Exception as ex:
+            raise Exception(("Cannot proccess command set_output_2: " + str(ex)))
