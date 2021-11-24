@@ -16,6 +16,7 @@ class UHFReader:
         self.port = port
         self.host = host
         self.count = 200
+        self.count_locker = True
         self.activate_output_0_flag = False
         self.activate_output_1_flag = False
         self.activate_output_2_flag = False
@@ -130,3 +131,6 @@ class UHFReader:
                 return data
         except Exception as ex:
             raise Exception(("Cannot proccess command set_output_2: " + str(ex)))
+        
+    # def blink_output0(self) -> None:
+

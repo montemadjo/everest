@@ -30,6 +30,11 @@ def producer(out_q, r_q, reader):
                 reader.set_output1(True)
             elif data == "TURN_LIGHT_2":
                 reader.set_output2(True)
+            elif data == "TURN_ALL_LIGHTS":
+                reader.set_output0(True)
+                reader.set_output1(True)
+                reader.set_output2(True)
+                reader.count = 20
 
         except: # queue here refers to the module, not a class
             pass
@@ -37,7 +42,14 @@ def producer(out_q, r_q, reader):
         # if card is succesfully read wait for other cards
         if reader.activate_output_0_flag is True or reader.activate_output_1_flag is True or reader.activate_output_2_flag:
             reader.count -= 1
-            print(reader.count)
+            # print(reader.count)
+
+            # if all flags are up open the gate:
+            if reader.activate_output_0_flag is True and reader.activate_output_1_flag is True and reader.activate_output_2_flag is True:
+                if reader.count_locker is True:
+                    reader.count = 20
+                    reader.count_locker = False
+                    print ("OPEN THE DOOR!")
 
         # counter is about to expire
         if reader.count < 20:
@@ -53,7 +65,8 @@ def producer(out_q, r_q, reader):
 
         # counter expired.
         if reader.count == 0:
-            reader.count = 200    
+            reader.count = 200
+            reader.count_locker = True
             reader.set_output0(False)
             reader.set_output1(False)
             reader.set_output2(False)
