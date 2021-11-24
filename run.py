@@ -1,4 +1,6 @@
 from uhf_reader import UHFReader
+from uhf_reader import Camera
+
 from queue import Queue
 from threading import Thread
 import zmq
@@ -13,7 +15,7 @@ SERVER_ENDPOINT = "tcp://localhost:5555"
 logging.basicConfig(format="%(levelname)s: %(message)s", level=logging.INFO)
 
 # a thread that produces data
-def producer(out_q, r_q, reader):
+def producer(out_q, r_q, q_opener, reader):
     """
     Producer
     """
@@ -25,16 +27,15 @@ def producer(out_q, r_q, reader):
         try:
             data = r_q.get(False,1)
             if data == "TURN_LIGHT_0":
-                reader.set_output0(True)
+                reader.activate_output_0_flag = True
             elif data == "TURN_LIGHT_1":
-                reader.set_output1(True)
+                reader.activate_output_1_flag = True
             elif data == "TURN_LIGHT_2":
-                reader.set_output2(True)
+                reader.activate_output_2_flag = True
             elif data == "TURN_ALL_LIGHTS":
-                reader.set_output0(True)
-                reader.set_output1(True)
-                reader.set_output2(True)
-                reader.count = 20
+                reader.activate_output_0_flag = True
+                reader.activate_output_1_flag = True
+                reader.activate_output_2_flag = True
 
         except: # queue here refers to the module, not a class
             pass
@@ -50,18 +51,21 @@ def producer(out_q, r_q, reader):
                     reader.count = 20
                     reader.count_locker = False
                     print ("OPEN THE DOOR!")
+                    q_opener.put("OPEN THE DOOR!")
+        
+        if reader.count < 200 and reader.count >= 20:
+            if reader.activate_output_0_flag:
+                reader.blink_output0()
+            if reader.activate_output_1_flag:
+                reader.blink_output1()
+            if reader.activate_output_2_flag:
+                reader.blink_output2()
 
         # counter is about to expire
-        if reader.count < 20:
-            if reader.count % 2 == 0:
-                reader.set_output0(True, False)
-                reader.set_output1(True, False)
-                reader.set_output2(True, False)
-            else:
-                reader.set_output0(False, False)
-                reader.set_output1(False, False)
-                reader.set_output2(False, False)
-
+        if reader.count < 20 and reader.count_locker is False:
+            reader.set_output0(True)
+            reader.set_output1(True)
+            reader.set_output2(True)
 
         # counter expired.
         if reader.count == 0:
@@ -70,6 +74,9 @@ def producer(out_q, r_q, reader):
             reader.set_output0(False)
             reader.set_output1(False)
             reader.set_output2(False)
+            reader.activate_output_0_flag = False
+            reader.activate_output_1_flag = False
+            reader.activate_output_2_flag = False
 
         # wheather the result is 00 or 01
         if tgs is not b'\x00':
@@ -118,12 +125,22 @@ def consumer(in_q, r_q):
         logging.info(reply)
         # time.sleep(1)
 
+# a thread that opens the gate
+def opener(q_opener):
+    while True:
+        data = q_opener.get()
+        print(f"SENT COMMAND: {data}")
+        if data == "OPEN THE DOOR!":
+            camera.switchOutput(1)
+
 if __name__ == '__main__':
     reader = UHFReader('192.168.1.153', 100)
     reader.connect()
     reader.set_output0(False)
     reader.set_output1(False)
     reader.set_output2(False)
+
+    camera = Camera("http://192.168.1.33/ISAPI/System/IO/outputs/1/trigger", "admin", "Admin123")
 
     # zmq context
     context = zmq.Context()
@@ -141,11 +158,14 @@ if __name__ == '__main__':
     try:
         q = Queue()
         r_q = Queue()
-        t1 = Thread(target=producer, args=(q, r_q, reader))
+        q_opener = Queue()
+        t1 = Thread(target=producer, args=(q, r_q, q_opener, reader))
         t2 = Thread(target=consumer, args=(q, r_q ))
+        t3 = Thread(target=opener, args=(q_opener, ))
 
         t1.start()
         t2.start()
+        t3.start()
 
     except Exception as ex:
         reader.disconnect()

@@ -20,6 +20,9 @@ class UHFReader:
         self.activate_output_0_flag = False
         self.activate_output_1_flag = False
         self.activate_output_2_flag = False
+        self.blinker_0_counter = 10
+        self.blinker_1_counter = 10
+        self.blinker_2_counter = 10
 
     def connect(self) -> None:
         try:
@@ -78,17 +81,17 @@ class UHFReader:
         except Exception as ex:
             raise Exception(("Cannot proccess command get_tag_data: " + str(ex)))
 
-    def set_output0(self, level, deactivate = True) -> bytes:
+    def set_output0(self, level) -> bytes:
         try:
             if level is False:
-                if deactivate:
-                    self.activate_output_0_flag = False
+                # if deactivate:
+                #     self.activate_output_0_flag = False
                 message = bytes.fromhex((SET_OUT0_LOW))
                 self.connection.send(message)
                 data = self.connection.recv(self.buffer_size)
                 return data
             else:
-                self.activate_output_0_flag = True
+                # self.activate_output_0_flag = True
                 message = bytes.fromhex((SET_OUT0_HIGH))
                 self.connection.send(message)
                 data = self.connection.recv(self.buffer_size)
@@ -96,17 +99,17 @@ class UHFReader:
         except Exception as ex:
             raise Exception(("Cannot proccess command set_output_0: " + str(ex)))
 
-    def set_output1(self, level, deactivate = True) -> bytes:
+    def set_output1(self, level) -> bytes:
         try:
             if level is False:
-                if deactivate:
-                    self.activate_output_1_flag = False
+                # if deactivate:
+                #     self.activate_output_1_flag = False
                 message = bytes.fromhex((SET_OUT1_LOW))
                 self.connection.send(message)
                 data = self.connection.recv(self.buffer_size)
                 return data
             else:
-                self.activate_output_1_flag = True
+                # self.activate_output_1_flag = True
                 message = bytes.fromhex((SET_OUT1_HIGH))
                 self.connection.send(message)
                 data = self.connection.recv(self.buffer_size)
@@ -114,17 +117,17 @@ class UHFReader:
         except Exception as ex:
             raise Exception(("Cannot proccess command set_output_1: " + str(ex)))
 
-    def set_output2(self, level, deactivate = True) -> bytes:
+    def set_output2(self, level) -> bytes:
         try:
             if level is False:
-                if deactivate:
-                    self.activate_output_2_flag = False
+                # if deactivate:
+                #     self.activate_output_2_flag = False
                 message = bytes.fromhex((SET_RELEY_LOW))
                 self.connection.send(message)
                 data = self.connection.recv(self.buffer_size)
                 return data
             else:
-                self.activate_output_2_flag = True
+                # self.activate_output_2_flag = True
                 message = bytes.fromhex((SET_RELEY_HIGH))
                 self.connection.send(message)
                 data = self.connection.recv(self.buffer_size)
@@ -132,5 +135,32 @@ class UHFReader:
         except Exception as ex:
             raise Exception(("Cannot proccess command set_output_2: " + str(ex)))
         
-    # def blink_output0(self) -> None:
+    def blink_output0(self) -> None:
+        self.blinker_0_counter -= 1
+        if self.blinker_0_counter == 0:
+            self.blinker_0_counter = 10
 
+        if self.blinker_0_counter >= 5:
+            self.set_output0(False)
+        else:
+            self.set_output0(True)
+
+    def blink_output1(self) -> None:
+        self.blinker_1_counter -= 1
+        if self.blinker_1_counter == 0:
+            self.blinker_1_counter = 10
+
+        if self.blinker_1_counter >= 5:
+            self.set_output1(False)
+        else:
+            self.set_output1(True)
+
+    def blink_output2(self) -> None:
+        self.blinker_2_counter -= 1
+        if self.blinker_2_counter == 0:
+            self.blinker_2_counter = 10
+
+        if self.blinker_2_counter >= 5:
+            self.set_output2(False)
+        else:
+            self.set_output2(True)
