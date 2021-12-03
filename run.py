@@ -19,6 +19,9 @@ def producer(out_q, r_q, q_opener, reader):
     """
     Producer
     """
+    employees = []
+    vehicle = None
+    route = None
     while True:
         # produce some data
         clr = reader.clear_reader_buffer()
@@ -26,13 +29,17 @@ def producer(out_q, r_q, q_opener, reader):
 
         try:
             data = r_q.get(False,1)
-            if data == "TURN_LIGHT_0":
+            if data["command"] == "VEHICLE":
                 reader.activate_output_0_flag = True
-            elif data == "TURN_LIGHT_1":
+                # vehicle
+            elif data["command"] == "EMPLOYEE":
                 reader.activate_output_1_flag = True
-            elif data == "TURN_LIGHT_2":
+                # employee
+            elif data["command"] == "ROUTE":
                 reader.activate_output_2_flag = True
-            elif data == "TURN_ALL_LIGHTS":
+                # route
+            elif data["command"] == "TURN_ALL_LIGHTS":
+                # superemployee
                 reader.activate_output_0_flag = True
                 reader.activate_output_1_flag = True
                 reader.activate_output_2_flag = True
@@ -107,20 +114,25 @@ def consumer(in_q, r_q):
                 "password": 21,
                 "command": "card read"
             },
-            "card": card.decode("utf-8") 
+            "card": card.decode("utf-8"),
+            "command": None
         }
 
         message = json.dumps(data)
         client.send_string(message)
         reply = client.recv()
         if reply == b'VEHICLE card found, turn up light 0!':
-            r_q.put("TURN_LIGHT_0")
+            data["command"] = "VEHICLE"
+            r_q.put(data)
         elif reply == b'EMPLOYEE card found, turn up light 1!':
-            r_q.put("TURN_LIGHT_1")
+            data["command"] = "EMPLOYEE"
+            r_q.put(data)
         elif reply == b'ROUTE card found, turn up light 2!':
-            r_q.put("TURN_LIGHT_2")
+            data["command"] = "ROUTE"
+            r_q.put(data)
         elif reply == b'card found, open gate!':
-            r_q.put("TURN_ALL_LIGHTS")
+            data["command"] = "TURN_ALL_LIGHTS"
+            r_q.put(data)
 
         logging.info(reply)
         # time.sleep(1)
@@ -134,13 +146,13 @@ def opener(q_opener):
             camera.switchOutput(1)
 
 if __name__ == '__main__':
-    reader = UHFReader('192.168.1.153', 100)
+    reader = UHFReader('192.168.1.154', 100)
     reader.connect()
     reader.set_output0(False)
     reader.set_output1(False)
     reader.set_output2(False)
 
-    camera = Camera("http://192.168.1.33/ISAPI/System/IO/outputs/1/trigger", "admin", "Admin123")
+    camera = Camera("http://192.168.1.152/ISAPI/System/IO/outputs/1/trigger", "admin", "Tfs123456")
 
     # zmq context
     context = zmq.Context()
