@@ -112,7 +112,7 @@ def producer(out_q, r_q, q_opener, q_sender, reader):
                 # if all flags are up open the gate:
                 if reader.activate_output_0_flag is True and reader.activate_output_1_flag is True and reader.activate_output_2_flag is True:
                     if reader.count_locker is True:
-                        reader.count = 40
+                        reader.count = 30
                         reader.count_locker = False
                         print ("OPEN THE DOOR!")
                         q_opener.put("OPEN THE DOOR!")
