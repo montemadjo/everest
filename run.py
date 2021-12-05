@@ -1,5 +1,6 @@
 from uhf_reader import UHFReader
 from uhf_reader import Camera
+from uhf_reader import Sender
 from datetime import datetime
 
 from queue import Queue
@@ -298,6 +299,7 @@ def sender(q_sender):
     while True:
         data = q_sender.get()
         print(f"send to wep api: {data}")
+        uhfsender.postStadionUhfCards(data)
 
 if __name__ == '__main__':
     reader = UHFReader('192.168.1.154', 100)
@@ -307,7 +309,8 @@ if __name__ == '__main__':
     reader.set_output2(False)
 
     camera = Camera("http://192.168.1.152/ISAPI/System/IO/outputs/1/trigger", "admin", "Tfs123456")
-
+    uhfsender = Sender(
+        "https://hexeverestfunctions.azurewebsites.net/api/PostStadionUhfCard")
     # zmq context
     context = zmq.Context()
     logging.info("connecting to server...")
