@@ -27,6 +27,9 @@ def producer(out_q, r_q, q_opener, q_sender, reader):
     route = None
     cardtypes = []
     deps = []
+    given_liting_command_0 = False
+    given_liting_command_1 = False
+    given_liting_command_2 = False
     while True:
         # produce some data
         clr = reader.clear_reader_buffer()
@@ -109,7 +112,7 @@ def producer(out_q, r_q, q_opener, q_sender, reader):
                 # if all flags are up open the gate:
                 if reader.activate_output_0_flag is True and reader.activate_output_1_flag is True and reader.activate_output_2_flag is True:
                     if reader.count_locker is True:
-                        reader.count = 20
+                        reader.count = 40
                         reader.count_locker = False
                         print ("OPEN THE DOOR!")
                         q_opener.put("OPEN THE DOOR!")
@@ -134,16 +137,22 @@ def producer(out_q, r_q, q_opener, q_sender, reader):
         if reader.count < 200 and reader.count >= 20:
             if "vehicle" in cardtypes:
                 reader.set_output0(True)
+                given_liting_command_0 = True
             if "employee" in cardtypes:
                 reader.set_output1(True)
+                given_liting_command_1 = True
             if "route" in cardtypes:
                 reader.set_output2(True)
+                given_liting_command_2 = True
             if "vehicle" in deps:
-                reader.blink_output0()
+                if given_liting_command_0 is False:
+                    reader.blink_output0()
             if "employee" in deps:
-                reader.blink_output1()
+                if given_liting_command_1 is False:
+                    reader.blink_output1()
             if "route" in deps:
-                reader.blink_output2()
+                if given_liting_command_2 is False:
+                    reader.blink_output2()
 
             # if reader.activate_output_0_flag:
             #     reader.blink_output0()
@@ -183,6 +192,9 @@ def producer(out_q, r_q, q_opener, q_sender, reader):
             reader.activate_output_0_flag = False
             reader.activate_output_1_flag = False
             reader.activate_output_2_flag = False
+            given_liting_command_0 = False
+            given_liting_command_1 = False
+            given_liting_command_2 = False
 
             # produce data for transfer
             # Data to be sent
