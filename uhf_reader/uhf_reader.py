@@ -23,6 +23,9 @@ class UHFReader:
         self.blinker_0_counter = 10
         self.blinker_1_counter = 10
         self.blinker_2_counter = 10
+        self.is_0_lit = False
+        self.is_1_lit = False
+        self.is_2_lit = False
 
     def connect(self) -> None:
         try:
@@ -85,13 +88,13 @@ class UHFReader:
         try:
             if level is False:
                 # if deactivate:
-                #     self.activate_output_0_flag = False
+                self.is_0_lit = False
                 message = bytes.fromhex((SET_OUT0_LOW))
                 self.connection.send(message)
                 data = self.connection.recv(self.buffer_size)
                 return data
             else:
-                # self.activate_output_0_flag = True
+                self.is_0_lit = True
                 message = bytes.fromhex((SET_OUT0_HIGH))
                 self.connection.send(message)
                 data = self.connection.recv(self.buffer_size)
@@ -103,13 +106,13 @@ class UHFReader:
         try:
             if level is False:
                 # if deactivate:
-                #     self.activate_output_1_flag = False
+                self.is_1_lit = False
                 message = bytes.fromhex((SET_OUT1_LOW))
                 self.connection.send(message)
                 data = self.connection.recv(self.buffer_size)
                 return data
             else:
-                # self.activate_output_1_flag = True
+                self.is_1_lit = True
                 message = bytes.fromhex((SET_OUT1_HIGH))
                 self.connection.send(message)
                 data = self.connection.recv(self.buffer_size)
@@ -121,13 +124,13 @@ class UHFReader:
         try:
             if level is False:
                 # if deactivate:
-                #     self.activate_output_2_flag = False
+                self.is_2_lit = False
                 message = bytes.fromhex((SET_RELEY_LOW))
                 self.connection.send(message)
                 data = self.connection.recv(self.buffer_size)
                 return data
             else:
-                # self.activate_output_2_flag = True
+                self.is_2_lit = True
                 message = bytes.fromhex((SET_RELEY_HIGH))
                 self.connection.send(message)
                 data = self.connection.recv(self.buffer_size)

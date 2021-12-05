@@ -25,7 +25,7 @@ def producer(out_q, r_q, q_opener, q_sender, reader):
     employees = []
     vehicle = None
     route = None
-    cardtype = None
+    cardtypes = []
     deps = []
     while True:
         # produce some data
@@ -38,37 +38,50 @@ def producer(out_q, r_q, q_opener, q_sender, reader):
             if command == "VEHICLE NEED ALL":
                 reader.activate_output_0_flag = True
                 # vehicle
-                cardtype = "vehicle"
-                deps = ["route", "employee"]
+                cardtypes.append("vehicle")
+                if "route" not in deps:
+                    deps.append("route")
+                if "employee" not in deps:
+                    deps.append("employee")
                 vehicle = data["card"]
             elif command == "EMPLOYEE NEED ALL":
                 reader.activate_output_1_flag = True
                 # employee
-                cardtype = "employee"
-                deps = ["route", "vehicle"]
-                employees.append(data["card"])
+                cardtypes.append("employee")
+                if "route" not in deps:
+                    deps.append("route")
+                if "vehicle" not in deps:
+                    deps.append("vehicle")
+                if data["card"] not in employees:
+                    employees.append(data["card"])
             elif command == "ROUTE NEED ALL":
                 reader.activate_output_2_flag = True
                 # route
-                cardtype = "route"
+                cardtypes.append("route")
+                if "employee" not in deps:
+                    deps.append("employee")
+                if "vehicle" not in deps:
+                    deps.append("vehicle")
                 deps = ["vehicle", "employee"]
                 route = data["card"]
             elif command == "EMPLOYEE NEED VEHICLE":
                 reader.activate_output_1_flag = True
                 # employee
-                cardtype = "employee"
-                deps = ["vehicle"]
+                cardtypes.append("employee")
+                if "vehicle" not in deps:
+                    deps.append("vehicle")
                 if data["card"] not in employees:
                     employees.append(data["card"])
             elif command == "VEHICLE NEED EMPLOYEE":
                 reader.activate_output_0_flag = True
                 # vehicle
-                cardtype = "vehicle"
-                deps = ["employee"]
+                cardtypes.append("vehicle")
+                if "employee" not in deps:
+                    deps.append("employee")
                 vehicle = data["card"]
             elif command == "FAST EMPLOYEE":
                 # superemployee
-                cardtype = "employee"
+                cardtypes.append("employee")
                 if data["card"] not in employees:
                     employees.append(data["card"])
                 # route = data["card"]
@@ -77,7 +90,7 @@ def producer(out_q, r_q, q_opener, q_sender, reader):
                 # reader.activate_output_2_flag = True
             elif command == "FAST VEHICLE":
                 # supervehicle
-                cardtype = "vehicle"
+                cardtypes.append("vehicle")
                 vehicle = data["card"]
                 # route = data["card"]
                 reader.activate_output_0_flag = True
@@ -119,11 +132,11 @@ def producer(out_q, r_q, q_opener, q_sender, reader):
                     q_opener.put("OPEN THE DOOR!")                
         
         if reader.count < 200 and reader.count >= 20:
-            if cardtype == "vehicle":
+            if "vehicle" in cardtypes:
                 reader.set_output0(True)
-            if cardtype == "employee":
+            if "employee" in cardtypes:
                 reader.set_output1(True)
-            if cardtype == "route":
+            if "route" in cardtypes:
                 reader.set_output2(True)
             if "vehicle" in deps:
                 reader.blink_output0()
@@ -140,10 +153,25 @@ def producer(out_q, r_q, q_opener, q_sender, reader):
             #     reader.blink_output2()
 
         # counter is about to expire
-        # if reader.count < 20 and reader.count_locker is False:
-        #     reader.set_output0(True)
-        #     reader.set_output1(True)
-        #     reader.set_output2(True)
+        if reader.count < 20 and reader.count_locker is False:
+            if "vehicle" in cardtypes:
+                reader.set_output0(True)
+            if "employee" in cardtypes:
+                reader.set_output1(True)
+            if "route" in cardtypes:
+                reader.set_output2(True)
+            # if "vehicle" in cardtypes:
+            #     reader.set_output0(True)
+            # if "employee" in cardtypes:
+            #     reader.set_output1(True)
+            # if "route" in cardtypes:
+            #     reader.set_output2(True)
+            # if "vehicle" in deps:
+            #     reader.blink_output0()
+            # if "employee" in deps:
+            #     reader.blink_output1()
+            # if "route" in deps:
+            #     reader.blink_output2()
 
         # counter expired.
         if reader.count == 0:
@@ -179,7 +207,7 @@ def producer(out_q, r_q, q_opener, q_sender, reader):
             employees = []
             vehicle = None
             route = None
-            cardtype = None
+            cardtypes = []
             deps = []
 
         # wheather the result is 00 or 01
