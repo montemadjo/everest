@@ -14,6 +14,8 @@ import json
 REQUEST_TIMEOUT = 2500
 REQUEST_RETRIES = 10
 SERVER_ENDPOINT = "tcp://localhost:5555"
+IS_EASY_ACCESS = False
+MY_ID = 2
 logging.basicConfig(format="%(levelname)s: %(message)s", level=logging.INFO)
 
 # a thread that produces data
@@ -117,7 +119,14 @@ def producer(out_q, r_q, q_opener, q_sender, reader):
                         reader.count_locker = False
                         print ("OPEN THE DOOR!")
                         q_opener.put("OPEN THE DOOR!")
-            
+
+            if command == "VEHICLE NEED ALL" and IS_EASY_ACCESS is True:
+                if reader.count_locker is True:
+                    reader.count = 20
+                    reader.count_locker = False
+                    print("OPEN THE DOOR FAST!")
+                    q_opener.put("OPEN THE DOOR!")
+
             elif command == "EMPLOYEE NEED VEHICLE" or command == "VEHICLE NEED EMPLOYEE":
                 # if vehicle and employee flags are up open the gate:
                 if reader.activate_output_0_flag is True and reader.activate_output_1_flag is True:
@@ -201,7 +210,7 @@ def producer(out_q, r_q, q_opener, q_sender, reader):
             # Data to be sent
             message = {
                 "uhf": {
-                    "id": 1,
+                    "id": MY_ID,
                     "password": 21,
                     "command": "card read"
                 },
