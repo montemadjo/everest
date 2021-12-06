@@ -218,7 +218,7 @@ def producer(out_q, r_q, q_opener, q_sender, reader):
 
             # produce data for transfer
             # Data to be sent
-            now = datetime.now()
+            now = datetime.strftime('%Y-%m-%d %H:%M:%S')
             print(f"{now}: timer expired")
 
             message = {
@@ -228,7 +228,9 @@ def producer(out_q, r_q, q_opener, q_sender, reader):
                     "command": "card read"
                 },
                 "employees": employees,
-                "vehicle": vehicle,
+                "simpleemployees": simpleemployees,
+                "vehicles": vehicles,
+                "simplevehicles": simplevehicles,
                 "route": route,
                 "accesstime": now,
                 "command": None
