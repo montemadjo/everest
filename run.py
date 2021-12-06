@@ -39,7 +39,7 @@ def producer(out_q, r_q, q_opener, q_sender, reader):
         tgs = reader.scan_for_tags()
 
         try:
-            data = r_q.get(False,1)
+            data = r_q.get(False, 1)
             command = data["command"]
             if command == "VEHICLE NEED ALL":
                 reader.activate_output_0_flag = True
@@ -103,7 +103,7 @@ def producer(out_q, r_q, q_opener, q_sender, reader):
                 # reader.activate_output_1_flag = True
                 # reader.activate_output_2_flag = True
 
-        except: # queue here refers to the module, not a class
+        except:  # queue here refers to the module, not a class
             pass
 
         # if card is succesfully read wait for other cards
@@ -117,7 +117,7 @@ def producer(out_q, r_q, q_opener, q_sender, reader):
                     if reader.count_locker is True:
                         reader.count = 30
                         reader.count_locker = False
-                        print ("OPEN THE DOOR!")
+                        print("OPEN THE DOOR!")
                         q_opener.put("OPEN THE DOOR!")
 
             if command == "VEHICLE NEED ALL" and IS_EASY_ACCESS is True:
@@ -133,7 +133,7 @@ def producer(out_q, r_q, q_opener, q_sender, reader):
                     if reader.count_locker is True:
                         reader.count = 20
                         reader.count_locker = False
-                        print ("OPEN THE DOOR!")
+                        print("OPEN THE DOOR!")
                         q_opener.put("OPEN THE DOOR!")
 
             elif command == "FAST EMPLOYEE" or command == "FAST VEHICLE":
@@ -141,9 +141,9 @@ def producer(out_q, r_q, q_opener, q_sender, reader):
                 if reader.count_locker is True:
                     reader.count = 20
                     reader.count_locker = False
-                    print ("OPEN THE DOOR!")
-                    q_opener.put("OPEN THE DOOR!")                
-        
+                    print("OPEN THE DOOR!")
+                    q_opener.put("OPEN THE DOOR!")
+
         if reader.count < 200 and reader.count >= 20:
             if "vehicle" in cardtypes:
                 reader.set_output0(True)
@@ -208,6 +208,10 @@ def producer(out_q, r_q, q_opener, q_sender, reader):
 
             # produce data for transfer
             # Data to be sent
+            now = datetime.now()
+            print(f"{now}: timer expired")
+            print(message)
+
             message = {
                 "uhf": {
                     "id": MY_ID,
@@ -217,12 +221,9 @@ def producer(out_q, r_q, q_opener, q_sender, reader):
                 "employees": employees,
                 "vehicle": vehicle,
                 "route": route,
+                "accesstime": now,
                 "command": None
             }
-
-            now = datetime.now()
-            print(f"{now}: timer expired")
-            print(message)
 
             q_sender.put(message)
 
@@ -245,6 +246,8 @@ def producer(out_q, r_q, q_opener, q_sender, reader):
         # i da se poziva na spoljnu komandu za upravljanje semaforom
 
 # a thread that consumes data
+
+
 def consumer(in_q, r_q):
     i = 0
     while True:
@@ -254,7 +257,7 @@ def consumer(in_q, r_q):
         card = binascii.hexlify((bytearray(data)))
         print(card)
 
-        # Data to be written 
+        # Data to be written
         data = {
             "uhf": {
                 "id": 1,
@@ -294,6 +297,8 @@ def consumer(in_q, r_q):
         # time.sleep(1)
 
 # a thread that opens the gate
+
+
 def opener(q_opener):
     while True:
         data = q_opener.get()
@@ -310,6 +315,7 @@ def sender(q_sender):
         print(f"send to wep api: {data}")
         uhfsender.postStadionUhfCards(data)
 
+
 if __name__ == '__main__':
     reader = UHFReader('192.168.1.154', 100)
     reader.connect()
@@ -317,7 +323,8 @@ if __name__ == '__main__':
     reader.set_output1(False)
     reader.set_output2(False)
 
-    camera = Camera("http://192.168.1.152/ISAPI/System/IO/outputs/1/trigger", "admin", "Tfs123456")
+    camera = Camera(
+        "http://192.168.1.152/ISAPI/System/IO/outputs/1/trigger", "admin", "Tfs123456")
     uhfsender = Sender(
         "https://hexeverestfunctions.azurewebsites.net/api/PostStadionUhfCard")
     # zmq context
@@ -339,7 +346,7 @@ if __name__ == '__main__':
         q_opener = Queue()
         q_sender = Queue()
         t1 = Thread(target=producer, args=(q, r_q, q_opener, q_sender, reader))
-        t2 = Thread(target=consumer, args=(q, r_q ))
+        t2 = Thread(target=consumer, args=(q, r_q))
         t3 = Thread(target=opener, args=(q_opener, ))
         t4 = Thread(target=sender, args=(q_sender, ))
 
