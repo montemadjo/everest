@@ -26,7 +26,9 @@ def producer(out_q, r_q, q_opener, q_sender, reader):
     Producer
     """
     employees = []
-    vehicle = None
+    simpleemployees = []
+    vehicles = []
+    simplevehicles = []
     route = None
     cardtypes = []
     deps = []
@@ -49,7 +51,7 @@ def producer(out_q, r_q, q_opener, q_sender, reader):
                     deps.append("route")
                 if "employee" not in deps:
                     deps.append("employee")
-                vehicle = data["card"]
+                vehicles.append(data["card"])
             elif command == "EMPLOYEE NEED ALL":
                 reader.activate_output_1_flag = True
                 # employee
@@ -76,15 +78,23 @@ def producer(out_q, r_q, q_opener, q_sender, reader):
                 cardtypes.append("employee")
                 if "vehicle" not in deps:
                     deps.append("vehicle")
-                if data["card"] not in employees:
-                    employees.append(data["card"])
+                # if data["card"] not in employees:
+                employees.append(data["card"])
+            elif command == "SIMPLEEMPLOYEE NEED SIMPLEVEHICLE":
+                # reader.activate_output_1_flag = True
+                # simpleemployee
+                cardtypes.append("simpleemployee")
+                if "simplevehicle" not in deps:
+                    deps.append("simplevehicle")
+                # if data["card"] not in simpleemployees:
+                simpleemployees.append(data["card"])
             elif command == "VEHICLE NEED EMPLOYEE":
                 reader.activate_output_0_flag = True
                 # vehicle
                 cardtypes.append("vehicle")
                 if "employee" not in deps:
                     deps.append("employee")
-                vehicle = data["card"]
+                vehicles.append(data["card"])
             elif command == "FAST EMPLOYEE":
                 # superemployee
                 cardtypes.append("employee")
@@ -94,10 +104,10 @@ def producer(out_q, r_q, q_opener, q_sender, reader):
                 # reader.activate_output_0_flag = True
                 reader.activate_output_1_flag = True
                 # reader.activate_output_2_flag = True
-            elif command == "FAST VEHICLE":
+            elif command == "FAST SIMPLEVEHICLE":
                 # supervehicle
-                cardtypes.append("vehicle")
-                vehicle = data["card"]
+                cardtypes.append("simplevehicle")
+                simplevehicles.append(data["card"])
                 # route = data["card"]
                 reader.activate_output_0_flag = True
                 # reader.activate_output_1_flag = True
@@ -136,7 +146,7 @@ def producer(out_q, r_q, q_opener, q_sender, reader):
                         print("OPEN THE DOOR!")
                         q_opener.put("OPEN THE DOOR!")
 
-            elif command == "FAST EMPLOYEE" or command == "FAST VEHICLE":
+            elif command == "FAST EMPLOYEE" or command == "FAST SIMPLEVEHICLE":
                 # open the gate bezuslovno
                 if reader.count_locker is True:
                     reader.count = 20
@@ -228,7 +238,9 @@ def producer(out_q, r_q, q_opener, q_sender, reader):
             q_sender.put(message)
 
             employees = []
-            vehicle = None
+            simpleemployees = []
+            vehicles = []
+            simplevehicles = []
             route = None
             cardtypes = []
             deps = []
@@ -280,17 +292,23 @@ def consumer(in_q, r_q):
         elif reply == b'ROUTE card found, vehicle and employee needed!':
             data["command"] = "ROUTE NEED ALL"
             r_q.put(data)
-        elif reply == b'FAST card found, type employee':
+        elif reply == b'FAST card found, type employee': # will never happen...
             data["command"] = "FAST EMPLOYEE"
             r_q.put(data)
-        elif reply == b'FAST card found, type vehicle':
-            data["command"] = "FAST VEHICLE"
+        elif reply == b'FAST card found, type simplevehicle': # will happen very often...
+            data["command"] = "FAST SIMPLEVEHICLE"
             r_q.put(data)
         elif reply == b'EMPLOYEE card found, vehicle needed!':
             data["command"] = "EMPLOYEE NEED VEHICLE"
             r_q.put(data)
+        elif reply == b'SIMPLEEMPLOYEE card found, simplevehicle needed!':
+            data["command"] = "SIMPLEEMPLOYEE NEED SIMPLEVEHICLE"
+            r_q.put(data)
         elif reply == b'VEHICLE card found, employee needed!':
             data["command"] = "VEHICLE NEED EMPLOYEE"
+            r_q.put(data)
+        elif reply == b'SIMPLEVEHICLE card found, simpleemployee needed!':
+            data["command"] = "SIMPLEVEHICLE NEED SIMPLEEMPLOYEE"
             r_q.put(data)
 
         logging.info(reply)
