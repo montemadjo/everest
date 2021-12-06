@@ -210,7 +210,6 @@ def producer(out_q, r_q, q_opener, q_sender, reader):
             # Data to be sent
             now = datetime.now()
             print(f"{now}: timer expired")
-            print(message)
 
             message = {
                 "uhf": {
@@ -225,6 +224,7 @@ def producer(out_q, r_q, q_opener, q_sender, reader):
                 "command": None
             }
 
+            print(message)
             q_sender.put(message)
 
             employees = []
