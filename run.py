@@ -60,8 +60,8 @@ def producer(out_q, r_q, q_opener, q_sender, reader):
                     deps.append("route")
                 if "vehicle" not in deps:
                     deps.append("vehicle")
-                if data["card"] not in employees:
-                    employees.append(data["card"])
+                # if data["card"] not in employees:
+                employees.append(data["card"])
             elif command == "ROUTE NEED ALL":
                 reader.activate_output_2_flag = True
                 # route
@@ -218,7 +218,7 @@ def producer(out_q, r_q, q_opener, q_sender, reader):
 
             # produce data for transfer
             # Data to be sent
-            now = datetime.strftime('%Y-%m-%d %H:%M:%S')
+            now = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
             print(f"{now}: timer expired")
 
             message = {
