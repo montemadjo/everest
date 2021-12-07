@@ -195,13 +195,13 @@ def producer(out_q, r_q, q_opener, q_sender, reader):
                 given_liting_command_2 = True
             if "vehicle" in deps:
                 if given_liting_command_0 is False:
-                    reader.blink_output0()
+                    reader.blink_output0(8, 2)
             if "employee" in deps:
                 if given_liting_command_1 is False:
-                    reader.blink_output1()
+                    reader.blink_output1(8, 2)
             if "route" in deps:
                 if given_liting_command_2 is False:
-                    reader.blink_output2()
+                    reader.blink_output2(8, 2)
 
             # if reader.activate_output_0_flag:
             #     reader.blink_output0()

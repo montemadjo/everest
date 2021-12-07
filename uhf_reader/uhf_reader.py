@@ -138,32 +138,32 @@ class UHFReader:
         # except Exception as ex:
         #     raise Exception(("Cannot proccess command set_output_2: " + str(ex)))
         
-    def blink_output0(self) -> None:
+    def blink_output0(self, dark, light) -> None:
         self.blinker_0_counter -= 1
         if self.blinker_0_counter == 0:
-            self.blinker_0_counter = 10
+            self.blinker_0_counter = dark + light
 
-        if self.blinker_0_counter >= 5:
+        if self.blinker_0_counter >= light:
             self.set_output0(False)
         else:
             self.set_output0(True)
 
-    def blink_output1(self) -> None:
+    def blink_output1(self, dark, light) -> None:
         self.blinker_1_counter -= 1
         if self.blinker_1_counter == 0:
-            self.blinker_1_counter = 10
+            self.blinker_1_counter = dark + light
 
-        if self.blinker_1_counter >= 5:
+        if self.blinker_1_counter >= light:
             self.set_output1(False)
         else:
             self.set_output1(True)
 
-    def blink_output2(self) -> None:
+    def blink_output2(self, dark, light) -> None:
         self.blinker_2_counter -= 1
         if self.blinker_2_counter == 0:
-            self.blinker_2_counter = 10
+            self.blinker_2_counter = dark + light
 
-        if self.blinker_2_counter >= 5:
+        if self.blinker_2_counter >= light:
             self.set_output2(False)
         else:
             self.set_output2(True)
