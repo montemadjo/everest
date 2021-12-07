@@ -34,6 +34,8 @@ def producer(out_q, r_q, q_opener, q_sender, reader):
     deps = []
     simpleflag_vehicle = False
     simpleflag_employee = False
+    simple_count_locker = True
+    simplecount = 20
     given_liting_command_0 = False
     given_liting_command_1 = False
     given_liting_command_2 = False
@@ -120,7 +122,6 @@ def producer(out_q, r_q, q_opener, q_sender, reader):
                 simplevehicles.append(data["card"])
                 simpleflag_vehicle = True
                 # route = data["card"]
-                reader.activate_output_0_flag = True
                 # reader.activate_output_1_flag = True
                 # reader.activate_output_2_flag = True
             elif command == "SIMPLEEMPLOYEE NEED SIMPLEVEHICLE":
@@ -129,7 +130,6 @@ def producer(out_q, r_q, q_opener, q_sender, reader):
                 simpleemployees.append(data["card"])
                 simpleflag_employee = True
                 # route = data["card"]
-                reader.activate_output_0_flag = True
                 # reader.activate_output_1_flag = True
                 # reader.activate_output_2_flag = True
 
@@ -173,15 +173,20 @@ def producer(out_q, r_q, q_opener, q_sender, reader):
                     reader.count_locker = False
                     print("OPEN THE DOOR!")
                     q_opener.put("OPEN THE DOOR!")
+        # if card is succesfully read wait for other cards
+        if simpleflag_employee is True or simpleflag_vehicle is True:
+            simplecount -= 1
+            # print(reader.count)
 
-            elif command == "SIMPLEVEHICLE NEED SIMPLEEMPLOYEE": #or command == "SIMPLEEMPLOYEE NEED SIMPLEVEHICLE":
+            if command == "SIMPLEVEHICLE NEED SIMPLEEMPLOYEE" or command == "SIMPLEEMPLOYEE NEED SIMPLEVEHICLE":
                 # za sada
-                # if simpleflag_vehicle is True and simpleflag_employee is True:
-                if reader.count_locker is True:
-                    reader.count = 20
-                    reader.count_locker = False
-                    print("OPEN THE DOOR!")
-                    q_opener.put("OPEN THE DOOR!")
+                simplecount -= 1
+                if simpleflag_vehicle is True and simpleflag_employee is True:
+                    if simple_count_locker is True:
+                        simplecount = 20
+                        simple_count_locker = False
+                        print("OPEN THE DOOR!")
+                        q_opener.put("OPEN THE DOOR!")
 
         if reader.count < 200 and reader.count >= 20:
             if "vehicle" in cardtypes:
@@ -271,12 +276,16 @@ def producer(out_q, r_q, q_opener, q_sender, reader):
             employees = []
             simpleemployees = []
             vehicles = []
-            simplevehicles = []
             route = None
             cardtypes = []
             deps = []
+
+        if simplecount == 0:
+            simple_count_locker = True
             simpleflag_vehicle = False
             simpleflag_employee = False
+            simplevehicles = []
+            simpleemployees = []
 
         # wheather the result is 00 or 01
         if tgs is not b'\x00':
