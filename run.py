@@ -32,6 +32,8 @@ def producer(out_q, r_q, q_opener, q_sender, reader):
     route = None
     cardtypes = []
     deps = []
+    simpleflag_vehicle = False
+    simpleflag_employee = False
     given_liting_command_0 = False
     given_liting_command_1 = False
     given_liting_command_2 = False
@@ -112,6 +114,24 @@ def producer(out_q, r_q, q_opener, q_sender, reader):
                 reader.activate_output_0_flag = True
                 # reader.activate_output_1_flag = True
                 # reader.activate_output_2_flag = True
+            elif command == "SIMPLEVEHICLE NEED SIMPLEEMPLOYEE":
+                # supervehicle
+                cardtypes.append("simplevehicle")
+                simplevehicles.append(data["card"])
+                simpleflag_vehicle = True
+                # route = data["card"]
+                reader.activate_output_0_flag = True
+                # reader.activate_output_1_flag = True
+                # reader.activate_output_2_flag = True
+            elif command == "SIMPLEEMPLOYEE NEED SIMPLEVEHICLE":
+                # supervehicle
+                cardtypes.append("simpleemployee")
+                simpleemployees.append(data["card"])
+                simpleflag_employee = True
+                # route = data["card"]
+                reader.activate_output_0_flag = True
+                # reader.activate_output_1_flag = True
+                # reader.activate_output_2_flag = True
 
         except:  # queue here refers to the module, not a class
             pass
@@ -148,6 +168,15 @@ def producer(out_q, r_q, q_opener, q_sender, reader):
 
             elif command == "FAST EMPLOYEE" or command == "FAST SIMPLEVEHICLE":
                 # open the gate bezuslovno
+                if reader.count_locker is True:
+                    reader.count = 20
+                    reader.count_locker = False
+                    print("OPEN THE DOOR!")
+                    q_opener.put("OPEN THE DOOR!")
+
+            elif command == "SIMPLEVEHICLE NEED SIMPLEEMPLOYEE" #or command == "SIMPLEEMPLOYEE NEED SIMPLEVEHICLE":
+                # za sada
+                # if simpleflag_vehicle is True and simpleflag_employee is True:
                 if reader.count_locker is True:
                     reader.count = 20
                     reader.count_locker = False
@@ -246,6 +275,8 @@ def producer(out_q, r_q, q_opener, q_sender, reader):
             route = None
             cardtypes = []
             deps = []
+            simpleflag_vehicle = False
+            simpleflag_employee = False
 
         # wheather the result is 00 or 01
         if tgs is not b'\x00':
