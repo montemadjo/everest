@@ -174,7 +174,7 @@ def producer(out_q, r_q, q_opener, q_sender, reader):
                     print("OPEN THE DOOR!")
                     q_opener.put("OPEN THE DOOR!")
 
-            elif command == "SIMPLEVEHICLE NEED SIMPLEEMPLOYEE" #or command == "SIMPLEEMPLOYEE NEED SIMPLEVEHICLE":
+            elif command == "SIMPLEVEHICLE NEED SIMPLEEMPLOYEE": #or command == "SIMPLEEMPLOYEE NEED SIMPLEVEHICLE":
                 # za sada
                 # if simpleflag_vehicle is True and simpleflag_employee is True:
                 if reader.count_locker is True:
