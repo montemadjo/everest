@@ -169,7 +169,7 @@ def producer(out_q, r_q, q_opener, q_sender, reader):
                         print("OPEN THE DOOR!")
                         q_opener.put("OPEN THE DOOR!")
 
-            elif command == "FAST EMPLOYEE" or command == "FAST SIMPLEVEHICLE":
+            elif command == "FAST EMPLOYEE":
                 # open the gate bezuslovno
                 if reader.count_locker is True:
                     reader.count = 20
@@ -190,6 +190,13 @@ def producer(out_q, r_q, q_opener, q_sender, reader):
                         simple_count_locker = False
                         print("OPEN THE DOOR!")
                         q_opener.put("OPEN THE DOOR!")
+            elif command == "FAST SIMPLEVEHICLE":
+                # open the gate bezuslovno
+                if simple_count_locker is True:
+                    simplecount = 20
+                    simple_count_locker = False
+                    print("OPEN THE DOOR!")
+                    q_opener.put("OPEN THE DOOR!")
 
         if reader.count < 200 and reader.count >= 20:
             if "vehicle" in cardtypes:
@@ -323,7 +330,7 @@ def consumer(in_q, r_q):
             },
             "card": card.decode("utf-8"),
             "command": None,
-            "accesstime": datetime.now()
+            "accesstime": datetime.now().strftime('%Y-%m-%d %H:%M:%S')
         }
 
         message = json.dumps(data)
