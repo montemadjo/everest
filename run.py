@@ -84,14 +84,15 @@ def producer(out_q, r_q, q_opener, q_sender, reader):
                     deps.append("vehicle")
                 # if data["card"] not in employees:
                 employees.append(data["card"])
-            elif command == "SIMPLEEMPLOYEE NEED SIMPLEVEHICLE":
-                # reader.activate_output_1_flag = True
-                # simpleemployee
-                cardtypes.append("simpleemployee")
-                if "simplevehicle" not in deps:
-                    deps.append("simplevehicle")
-                # if data["card"] not in simpleemployees:
-                simpleemployees.append(data["card"])
+            # elif command == "SIMPLEEMPLOYEE NEED SIMPLEVEHICLE":
+            #     # reader.activate_output_1_flag = True
+            #     # simpleemployee
+            #     print("SIMPLEEMPLOYEE NEED SIMPLEVEHICLE")
+            #     cardtypes.append("simpleemployee")
+            #     if "simplevehicle" not in deps:
+            #         deps.append("simplevehicle")
+            #     # if data["card"] not in simpleemployees:
+            #     simpleemployees.append(data["card"])
             elif command == "VEHICLE NEED EMPLOYEE":
                 reader.activate_output_0_flag = True
                 # vehicle
@@ -119,6 +120,7 @@ def producer(out_q, r_q, q_opener, q_sender, reader):
             elif command == "SIMPLEVEHICLE NEED SIMPLEEMPLOYEE":
                 # supervehicle
                 cardtypes.append("simplevehicle")
+                print("SIMPLEEMPLOYEE NEED SIMPLEVEHICLE")
                 simplevehicles.append(data["card"])
                 simpleflag_vehicle = True
                 # route = data["card"]
@@ -128,6 +130,7 @@ def producer(out_q, r_q, q_opener, q_sender, reader):
                 # supervehicle
                 cardtypes.append("simpleemployee")
                 simpleemployees.append(data["card"])
+                print("SIMPLEVEHICLE NEED SIMPLEEMPLOYEE")
                 simpleflag_employee = True
                 # route = data["card"]
                 # reader.activate_output_1_flag = True
