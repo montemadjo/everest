@@ -248,6 +248,7 @@ def producer(out_q, r_q, q_opener, q_sender, reader):
 
         # counter expired.
         if reader.count == 0 or simplecount == 0:
+            simplecount = 200
             reader.count = 200
             reader.count_locker = True
             reader.set_output0(False)
@@ -289,8 +290,6 @@ def producer(out_q, r_q, q_opener, q_sender, reader):
             route = None
             cardtypes = []
             deps = []
-
-        if simplecount == 0:
             simple_count_locker = True
             simpleflag_vehicle = False
             simpleflag_employee = False
