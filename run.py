@@ -247,16 +247,20 @@ def producer(out_q, r_q, q_opener, q_sender, reader):
             #     reader.blink_output2()
 
         # counter expired.
-        if reader.count == 0 or simplecount == 0:
-            simplecount = 200
+        if reader.count == 0:
             reader.count = 200
             reader.count_locker = True
+            # simplecount = 200
+            # simple_count_locker = True
+
             reader.set_output0(False)
             reader.set_output1(False)
             reader.set_output2(False)
+
             reader.activate_output_0_flag = False
             reader.activate_output_1_flag = False
             reader.activate_output_2_flag = False
+
             given_liting_command_0 = False
             given_liting_command_1 = False
             given_liting_command_2 = False
@@ -290,11 +294,60 @@ def producer(out_q, r_q, q_opener, q_sender, reader):
             route = None
             cardtypes = []
             deps = []
+            # simpleflag_vehicle = False
+            # simpleflag_employee = False
+            simplevehicles = []
+
+        if simplecount == 0:
+            simplecount = 200
+            # reader.count = 200
+            # reader.count_locker = True
             simple_count_locker = True
+
+            # reader.set_output0(False)
+            # reader.set_output1(False)
+            # reader.set_output2(False)
+
+            # reader.activate_output_0_flag = False
+            # reader.activate_output_1_flag = False
+            # reader.activate_output_2_flag = False
+
+            # given_liting_command_0 = False
+            # given_liting_command_1 = False
+            # given_liting_command_2 = False
+
+            # produce data for transfer
+            # Data to be sent
+            now = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+            print(f"{now}: timer expired")
+
+            message = {
+                "uhf": {
+                    "id": MY_ID,
+                    "password": 21,
+                    "command": "card read"
+                },
+                "employees": employees,
+                "simpleemployees": simpleemployees,
+                "vehicles": vehicles,
+                "simplevehicles": simplevehicles,
+                "route": route,
+                "accesstime": now,
+                "command": None
+            }
+
+            print(message)
+            q_sender.put(message)
+
+            # employees = []
+            simpleemployees = []
+            # vehicles = []
+            # route = None
+            cardtypes = []
+            deps = []
             simpleflag_vehicle = False
             simpleflag_employee = False
             simplevehicles = []
-            simpleemployees = []
 
         # wheather the result is 00 or 01
         if tgs is not b'\x00':
