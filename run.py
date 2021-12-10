@@ -114,7 +114,7 @@ def producer(out_q, r_q, q_opener, q_sender, reader):
                 cardtypes.append("simplevehicle")
                 simplevehicles.append(data["card"])
                 # route = data["card"]
-                reader.activate_output_0_flag = True
+                simpleflag_vehicle = True
                 # reader.activate_output_1_flag = True
                 # reader.activate_output_2_flag = True
             elif command == "SIMPLEVEHICLE NEED SIMPLEEMPLOYEE":
@@ -240,7 +240,7 @@ def producer(out_q, r_q, q_opener, q_sender, reader):
             #     reader.blink_output2()
 
         # counter expired.
-        if reader.count == 0:
+        if reader.count == 0 or simplecount == 0:
             reader.count = 200
             reader.count_locker = True
             reader.set_output0(False)
@@ -317,12 +317,13 @@ def consumer(in_q, r_q):
         # Data to be written
         data = {
             "uhf": {
-                "id": 1,
+                "id": MY_ID,
                 "password": 21,
                 "command": "card read"
             },
             "card": card.decode("utf-8"),
-            "command": None
+            "command": None,
+            "accesstime": datetime.now()
         }
 
         message = json.dumps(data)
@@ -337,10 +338,12 @@ def consumer(in_q, r_q):
         elif reply == b'ROUTE card found, vehicle and employee needed!':
             data["command"] = "ROUTE NEED ALL"
             r_q.put(data)
-        elif reply == b'FAST card found, type employee': # will never happen...
+        # will never happen...
+        elif reply == b'FAST card found, type employee':
             data["command"] = "FAST EMPLOYEE"
             r_q.put(data)
-        elif reply == b'FAST card found, type simplevehicle': # will happen very often...
+        # will happen very often...
+        elif reply == b'FAST card found, type simplevehicle':
             data["command"] = "FAST SIMPLEVEHICLE"
             r_q.put(data)
         elif reply == b'EMPLOYEE card found, vehicle needed!':
@@ -356,6 +359,10 @@ def consumer(in_q, r_q):
             data["command"] = "SIMPLEVEHICLE NEED SIMPLEEMPLOYEE"
             r_q.put(data)
 
+        now = datetime.now()
+
+        current_time = now.strftime("%H:%M:%S")
+        logging.info(current_time)
         logging.info(reply)
         # time.sleep(1)
 
