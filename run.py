@@ -183,13 +183,13 @@ def producer(out_q, r_q, q_opener, q_sender, reader):
 
             if command == "SIMPLEVEHICLE NEED SIMPLEEMPLOYEE" or command == "SIMPLEEMPLOYEE NEED SIMPLEVEHICLE":
                 # za sada
-                simplecount -= 1
-                if simpleflag_vehicle is True and simpleflag_employee is True:
-                    if simple_count_locker is True:
-                        simplecount = 20
-                        simple_count_locker = False
-                        print("OPEN THE DOOR!")
-                        q_opener.put("OPEN THE DOOR!")
+                # simplecount -= 1
+                # if simpleflag_vehicle is True and simpleflag_employee is True:
+                if simple_count_locker is True:
+                    simplecount = 20
+                    simple_count_locker = False
+                    print("OPEN THE DOOR!")
+                    q_opener.put("OPEN THE DOOR!")
             elif command == "FAST SIMPLEVEHICLE":
                 # open the gate bezuslovno
                 if simple_count_locker is True:
@@ -324,7 +324,7 @@ def producer(out_q, r_q, q_opener, q_sender, reader):
             message = {
                 "uhf": {
                     "id": MY_ID,
-                    "password": 21,
+                    "password": 222,
                     "command": "card read"
                 },
                 "employees": employees,
