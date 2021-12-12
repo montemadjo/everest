@@ -18,6 +18,8 @@ config.read('config.ini')
 
 MY_ID = int(config['Basic']['Id'])
 IS_EASY_ACCESS = config['Basic']['EasyAccess']
+OPPOSITE_SIDE_MASK_TIME = config['Basic']['OppositeSideMaskTime']
+
 REQUEST_TIMEOUT = int(config['Zmq']['Timeout'])
 REQUEST_RETRIES = int(config['Zmq']['Retries'])
 SERVER_ENDPOINT = config['Zmq']['Endpoint']
@@ -395,39 +397,51 @@ def consumer(in_q, r_q):
             },
             "card": card.decode("utf-8"),
             "command": None,
-            "accesstime": datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+            "accesstime": datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
         }
 
         message = json.dumps(data)
         client.send_string(message)
-        reply = client.recv()
-        if reply == b'VEHICLE card found, employee and route needed!':
+        breply = client.recv()
+        jreply = json.loads(breply)
+        reply = jreply["command"]
+        last_cards = jreply["last_cards"]
+
+        # consider cards that are shown longer than OPPOSITE_SIDE_MASK_TIME only
+        is_card_masked = False
+        for item in last_cards:
+            if item['card'] == card.decode("utf-8"):
+                last_access_time = datetime.strptime(item["accesstime"], '%Y-%m-%d %H:%M:%S')
+                print("last access time")
+                print(last_access_time)                
+        
+        if reply == 'VEHICLE card found, employee and route needed!':
             data["command"] = "VEHICLE NEED ALL"
             r_q.put(data)
-        elif reply == b'EMPLOYEE card found, vehicle and route needed!':
+        elif reply == 'EMPLOYEE card found, vehicle and route needed!':
             data["command"] = "EMPLOYEE NEED ALL"
             r_q.put(data)
-        elif reply == b'ROUTE card found, vehicle and employee needed!':
+        elif reply == 'ROUTE card found, vehicle and employee needed!':
             data["command"] = "ROUTE NEED ALL"
             r_q.put(data)
         # will never happen...
-        elif reply == b'FAST card found, type employee':
+        elif reply == 'FAST card found, type employee':
             data["command"] = "FAST EMPLOYEE"
             r_q.put(data)
         # will happen very often...
-        elif reply == b'FAST card found, type simplevehicle':
+        elif reply == 'FAST card found, type simplevehicle':
             data["command"] = "FAST SIMPLEVEHICLE"
             r_q.put(data)
-        elif reply == b'EMPLOYEE card found, vehicle needed!':
+        elif reply == 'EMPLOYEE card found, vehicle needed!':
             data["command"] = "EMPLOYEE NEED VEHICLE"
             r_q.put(data)
-        elif reply == b'SIMPLEEMPLOYEE card found, simplevehicle needed!':
+        elif reply == 'SIMPLEEMPLOYEE card found, simplevehicle needed!':
             data["command"] = "SIMPLEEMPLOYEE NEED SIMPLEVEHICLE"
             r_q.put(data)
-        elif reply == b'VEHICLE card found, employee needed!':
+        elif reply == 'VEHICLE card found, employee needed!':
             data["command"] = "VEHICLE NEED EMPLOYEE"
             r_q.put(data)
-        elif reply == b'SIMPLEVEHICLE card found, simpleemployee needed!':
+        elif reply == 'SIMPLEVEHICLE card found, simpleemployee needed!':
             data["command"] = "SIMPLEVEHICLE NEED SIMPLEEMPLOYEE"
             r_q.put(data)
 

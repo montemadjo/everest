@@ -1,6 +1,7 @@
 [Basic]
 Id = 2
 EasyAccess = False
+OppositeSideMaskTime = 30
 
 [Remote]
 SenderUrl = https://hexeverestfunctions.azurewebsites.net/api/PostStadionUhfCard
