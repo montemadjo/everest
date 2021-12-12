@@ -10,12 +10,25 @@ import logging
 import time
 import binascii
 import json
+import configparser
 
-REQUEST_TIMEOUT = 2500
-REQUEST_RETRIES = 10
-SERVER_ENDPOINT = "tcp://localhost:5555"
-IS_EASY_ACCESS = False
-MY_ID = 2
+# load the configuration file
+config = configparser.ConfigParser()
+config.read('config.ini')
+
+MY_ID = int(config['Basic']['Id'])
+IS_EASY_ACCESS = config['Basic']['EasyAccess']
+REQUEST_TIMEOUT = int(config['Zmq']['Timeout'])
+REQUEST_RETRIES = int(config['Zmq']['Retries'])
+SERVER_ENDPOINT = config['Zmq']['Endpoint']
+UHF_READER_ADDRESS = config['UhfReader']['Address']
+UHF_READER_PORT = int(config['UhfReader']['Port'])
+CAMERA_ADDRESS = config['Camera']['Address']
+CAMERA_USERNAME = config['Camera']['Username']
+CAMERA_PASSWORD = config['Camera']['Password']
+CAMERA_URL = "http://" + CAMERA_ADDRESS + "/ISAPI/System/IO/outputs/1/trigger"
+SENDER_URL = config['Remote']['SenderUrl']
+
 logging.basicConfig(format="%(levelname)s: %(message)s", level=logging.INFO)
 
 # a thread that produces data
@@ -446,16 +459,16 @@ def sender(q_sender):
 
 
 if __name__ == '__main__':
-    reader = UHFReader('192.168.1.154', 100)
+    reader = UHFReader(UHF_READER_ADDRESS, UHF_READER_PORT)
     reader.connect()
     reader.set_output0(False)
     reader.set_output1(False)
     reader.set_output2(False)
 
     camera = Camera(
-        "http://192.168.1.152/ISAPI/System/IO/outputs/1/trigger", "admin", "Tfs123456")
+        CAMERA_URL, CAMERA_USERNAME, CAMERA_PASSWORD)
     uhfsender = Sender(
-        "https://hexeverestfunctions.azurewebsites.net/api/PostStadionUhfCard")
+        SENDER_URL)
     # zmq context
     context = zmq.Context()
     logging.info("connecting to server...")
