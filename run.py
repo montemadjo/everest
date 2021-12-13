@@ -12,6 +12,9 @@ import binascii
 import json
 import configparser
 
+import sys
+import os
+
 # load the configuration file
 config = configparser.ConfigParser()
 config.read('config.ini')
@@ -382,102 +385,111 @@ def producer(out_q, r_q, q_opener, q_sender, reader):
 def consumer(in_q, r_q):
     i = 0
     while True:
-        data = in_q.get()
-        i += 1
-        print(i)
-        card = binascii.hexlify((bytearray(data)))
-        print(card)
+        try:
+            data = in_q.get()
+            i += 1
+            print(i)
+            card = binascii.hexlify((bytearray(data)))
+            print(card)
 
-        # Data to be written
-        data = {
-            "uhf": {
-                "id": MY_ID,
-                "password": 21,
-                "command": "card read"
-            },
-            "card": card.decode("utf-8"),
-            "command": None,
-            "accesstime": datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
-        }
+            # Data to be written
+            data = {
+                "uhf": {
+                    "id": MY_ID,
+                    "password": 21,
+                    "command": "card read"
+                },
+                "card": card.decode("utf-8"),
+                "command": None,
+                "accesstime": datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
+            }
 
-        message = json.dumps(data)
-        client.send_string(message)
-        breply = client.recv()
-        jreply = json.loads(breply)
-        reply = jreply["command"]
-        last_cards = jreply["last_cards"]
+            message = json.dumps(data)
+            client.send_string(message)
+            breply = client.recv()
+            jreply = json.loads(breply)
+            reply = jreply["command"]
+            last_cards = jreply["last_cards"]
 
-        # consider cards that are shown longer than OPPOSITE_SIDE_MASK_TIME only
-        is_card_masked = False
-        for item in last_cards:
-            if item['card'] == card.decode("utf-8"):
-                last_access_time = datetime.strptime(item["accesstime"], '%Y-%m-%d %H:%M:%S')
-                print("last access time")
-                print(last_access_time)
-                c = datetime.now() - last_access_time
-                if c.total_seconds() < OPPOSITE_SIDE_MASK_TIME:
-                    is_card_masked = True
-                    print("last access time total seconds:")
-                    print(c)
-                    print("CARD MASKED!!!")
-        
-        if is_card_masked is False:
-            if reply == 'VEHICLE card found, employee and route needed!':
-                data["command"] = "VEHICLE NEED ALL"
-                r_q.put(data)
-            elif reply == 'EMPLOYEE card found, vehicle and route needed!':
-                data["command"] = "EMPLOYEE NEED ALL"
-                r_q.put(data)
-            elif reply == 'ROUTE card found, vehicle and employee needed!':
-                data["command"] = "ROUTE NEED ALL"
-                r_q.put(data)
-            # will never happen...
-            elif reply == 'FAST card found, type employee':
-                data["command"] = "FAST EMPLOYEE"
-                r_q.put(data)
-            # will happen very often...
-            elif reply == 'FAST card found, type simplevehicle':
-                data["command"] = "FAST SIMPLEVEHICLE"
-                r_q.put(data)
-            elif reply == 'EMPLOYEE card found, vehicle needed!':
-                data["command"] = "EMPLOYEE NEED VEHICLE"
-                r_q.put(data)
-            elif reply == 'SIMPLEEMPLOYEE card found, simplevehicle needed!':
-                data["command"] = "SIMPLEEMPLOYEE NEED SIMPLEVEHICLE"
-                r_q.put(data)
-            elif reply == 'VEHICLE card found, employee needed!':
-                data["command"] = "VEHICLE NEED EMPLOYEE"
-                r_q.put(data)
-            elif reply == 'SIMPLEVEHICLE card found, simpleemployee needed!':
-                data["command"] = "SIMPLEVEHICLE NEED SIMPLEEMPLOYEE"
-                r_q.put(data)
+            # consider cards that are shown longer than OPPOSITE_SIDE_MASK_TIME only
+            is_card_masked = False
+            for item in last_cards:
+                if item['card'] == card.decode("utf-8"):
+                    last_access_time = datetime.strptime(
+                        item["accesstime"], '%Y-%m-%d %H:%M:%S')
+                    print("last access time")
+                    print(last_access_time)
+                    c = datetime.now() - last_access_time
+                    if c.total_seconds() < OPPOSITE_SIDE_MASK_TIME:
+                        is_card_masked = True
+                        print("last access time total seconds:")
+                        print(c)
+                        print("CARD MASKED!!!")
 
-        now = datetime.now()
+            if is_card_masked is False:
+                if reply == 'VEHICLE card found, employee and route needed!':
+                    data["command"] = "VEHICLE NEED ALL"
+                    r_q.put(data)
+                elif reply == 'EMPLOYEE card found, vehicle and route needed!':
+                    data["command"] = "EMPLOYEE NEED ALL"
+                    r_q.put(data)
+                elif reply == 'ROUTE card found, vehicle and employee needed!':
+                    data["command"] = "ROUTE NEED ALL"
+                    r_q.put(data)
+                # will never happen...
+                elif reply == 'FAST card found, type employee':
+                    data["command"] = "FAST EMPLOYEE"
+                    r_q.put(data)
+                # will happen very often...
+                elif reply == 'FAST card found, type simplevehicle':
+                    data["command"] = "FAST SIMPLEVEHICLE"
+                    r_q.put(data)
+                elif reply == 'EMPLOYEE card found, vehicle needed!':
+                    data["command"] = "EMPLOYEE NEED VEHICLE"
+                    r_q.put(data)
+                elif reply == 'SIMPLEEMPLOYEE card found, simplevehicle needed!':
+                    data["command"] = "SIMPLEEMPLOYEE NEED SIMPLEVEHICLE"
+                    r_q.put(data)
+                elif reply == 'VEHICLE card found, employee needed!':
+                    data["command"] = "VEHICLE NEED EMPLOYEE"
+                    r_q.put(data)
+                elif reply == 'SIMPLEVEHICLE card found, simpleemployee needed!':
+                    data["command"] = "SIMPLEVEHICLE NEED SIMPLEEMPLOYEE"
+                    r_q.put(data)
 
-        current_time = now.strftime("%H:%M:%S")
-        logging.info(current_time)
-        logging.info(reply)
-        # time.sleep(1)
+            now = datetime.now()
+
+            current_time = now.strftime("%H:%M:%S")
+            logging.info(current_time)
+            logging.info(reply)
+            # time.sleep(1)
+        except:
+            os._exit(1)
 
 # a thread that opens the gate
 
 
 def opener(q_opener):
     while True:
-        data = q_opener.get()
-        print(f"SENT COMMAND: {data}")
-        if data == "OPEN THE DOOR!":
-            camera.switchOutput(1)
+        try:
+            data = q_opener.get()
+            print(f"SENT COMMAND: {data}")
+            if data == "OPEN THE DOOR!":
+                camera.switchOutput(1)
+        except:
+            os._exit(1)
 
 # a thread that sends the data over web api
 
 
 def sender(q_sender):
     while True:
-        data = q_sender.get()
-        print(f"send to wep api: {data}")
-        uhfsender.postStadionUhfCards(data)
-
+        try:
+            data = q_sender.get()
+            print(f"send to wep api: {data}")
+            uhfsender.postStadionUhfCards(data)
+        except:
+            os._exit(1)
 
 if __name__ == '__main__':
     reader = UHFReader(UHF_READER_ADDRESS, UHF_READER_PORT)
@@ -518,9 +530,9 @@ if __name__ == '__main__':
         t3.start()
         t4.start()
 
-    except Exception as ex:
-        reader.disconnect()
-        raise Exception(("Something broke: " + str(ex)))
+    except:
+        print("EXCEPTION OCCURS!!!")
+        sys.exit(1)
 
     # while True:
     #     clr = reader.clear_reader_buffer()
