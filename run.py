@@ -14,13 +14,14 @@ import configparser
 
 import sys
 import os
+from distutils.util import strtobool
 
 # load the configuration file
 config = configparser.ConfigParser()
 config.read('config.ini')
 
 MY_ID = int(config['Basic']['Id'])
-IS_EASY_ACCESS = config['Basic']['EasyAccess']
+IS_EASY_ACCESS = bool(strtobool(config['Basic']['EasyAccess']))
 OPPOSITE_SIDE_MASK_TIME = int(config['Basic']['OppositeSideMaskTime'])
 
 REQUEST_TIMEOUT = int(config['Zmq']['Timeout'])
