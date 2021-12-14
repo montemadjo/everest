@@ -149,7 +149,7 @@ def producer(out_q, r_q, q_opener, q_sender, reader):
                 # supervehicle
                 cardtypes.append("simpleemployee")
                 simpleemployees.append(data["card"])
-                print("SIMPLEVEHICLE NEED SIMPLEEMPLOYEE")
+                print("SIMPLEEMPLOYEE NEED SIMPLEVEHICLE")
                 simpleflag_employee = True
                 # route = data["card"]
                 # reader.activate_output_1_flag = True
