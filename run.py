@@ -139,7 +139,7 @@ def producer(out_q, r_q, q_opener, q_sender, reader):
             elif command == "SIMPLEVEHICLE NEED SIMPLEEMPLOYEE":
                 # supervehicle
                 cardtypes.append("simplevehicle")
-                print("SIMPLEEMPLOYEE NEED SIMPLEVEHICLE")
+                print("SIMPLEVEHICLE NEED SIMPLEEMPLOYEE")
                 simplevehicles.append(data["card"])
                 simpleflag_vehicle = True
                 # route = data["card"]
@@ -195,20 +195,21 @@ def producer(out_q, r_q, q_opener, q_sender, reader):
                     reader.count_locker = False
                     print("OPEN THE DOOR!")
                     q_opener.put("OPEN THE DOOR!")
+
         # if card is succesfully read wait for other cards
         if simpleflag_employee is True or simpleflag_vehicle is True:
             simplecount -= 1
             # print(reader.count)
 
             if command == "SIMPLEVEHICLE NEED SIMPLEEMPLOYEE" or command == "SIMPLEEMPLOYEE NEED SIMPLEVEHICLE":
-                # za sada
-                # simplecount -= 1
-                # if simpleflag_vehicle is True and simpleflag_employee is True:
-                if simple_count_locker is True:
-                    simplecount = 20
-                    simple_count_locker = False
-                    print("OPEN THE DOOR!")
-                    q_opener.put("OPEN THE DOOR!")
+                # if vehicle and employee flags are up open the gate:
+                if simpleflag_employee is True and simpleflag_vehicle is True:
+                    if simple_count_locker is True:
+                        simplecount = 20
+                        simple_count_locker = False
+                        print("OPEN THE DOOR!")
+                        q_opener.put("OPEN THE DOOR!")
+
             elif command == "FAST SIMPLEVEHICLE":
                 # open the gate bezuslovno
                 if simple_count_locker is True:
