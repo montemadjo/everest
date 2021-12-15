@@ -23,6 +23,9 @@ args = parser.parse_args()
 
 config_path = args.config
 
+print("config path")
+print(config_path)
+
 # load the configuration file
 config = configparser.ConfigParser()
 config.read(config_path)
