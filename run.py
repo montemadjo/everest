@@ -11,14 +11,21 @@ import time
 import binascii
 import json
 import configparser
+import argparse
 
 import sys
 import os
 from distutils.util import strtobool
 
+parser = argparse.ArgumentParser()
+parser.add_argument("config", help="path to configuration file")
+args = parser.parse_args()
+
+config_path = args.config
+
 # load the configuration file
 config = configparser.ConfigParser()
-config.read('config.ini')
+config.read(config_path)
 
 MY_ID = int(config['Basic']['Id'])
 IS_EASY_ACCESS = bool(strtobool(config['Basic']['EasyAccess']))
