@@ -422,6 +422,8 @@ def consumer(in_q, r_q):
             jreply = json.loads(breply)
             reply = jreply["command"]
             last_cards = jreply["last_cards"]
+            print("last_cards")
+            print(last_cards)
 
             # consider cards that are shown longer than OPPOSITE_SIDE_MASK_TIME only
             is_card_masked = False
