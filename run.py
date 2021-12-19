@@ -400,8 +400,6 @@ def producer(out_q, r_q, q_opener, q_sender, q_wd, reader):
 def consumer(in_q, r_q, q_wd):
     i = 0
     while True:
-        q_wd.put("consumer_alive")
-
         try:
             data = in_q.get()
             i += 1
@@ -523,10 +521,9 @@ def watchdog(q_wd):
         counter -= 1
         time.sleep(0.025)
 
-        print(counter)
-
         if counter < 0:
-            if is_sender_alive is True and is_opener_alive is True and is_consumer_alive is True and is_producer_alive is True:
+            # and is_opener_alive is True and is_consumer_alive is True and is_sender_alive is True:
+            if is_producer_alive is True:
                 is_sender_alive = False
                 is_opener_alive = False
                 is_consumer_alive = False
@@ -537,7 +534,6 @@ def watchdog(q_wd):
             counter = 100
         try:
             data = q_wd.get(False)
-            print('two')
             if data == "sender_alive":
                 print("SENDER alive")
                 is_sender_alive = True
@@ -548,7 +544,7 @@ def watchdog(q_wd):
                 print("CONSUMER alive")
                 is_consumer_alive = True
             elif data == "producer_alive":
-                print("PRODUCER alive")
+                # print("PRODUCER alive")
                 is_producer_alive = True
         except:
             pass
