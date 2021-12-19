@@ -50,7 +50,7 @@ logging.basicConfig(format="%(levelname)s: %(message)s", level=logging.INFO)
 # a thread that produces data
 
 
-def producer(out_q, r_q, q_opener, q_sender, reader):
+def producer(out_q, r_q, q_opener, q_sender, q_wd, reader):
     """
     Producer
     """
@@ -72,6 +72,9 @@ def producer(out_q, r_q, q_opener, q_sender, reader):
         # produce some data
         clr = reader.clear_reader_buffer()
         tgs = reader.scan_for_tags()
+
+        # watchdog informer
+        q_wd.put("producer_alive")
 
         try:
             data = r_q.get(False, 1)
@@ -394,9 +397,11 @@ def producer(out_q, r_q, q_opener, q_sender, reader):
 # a thread that consumes data
 
 
-def consumer(in_q, r_q):
+def consumer(in_q, r_q, q_wd):
     i = 0
     while True:
+        q_wd.put("consumer_alive")
+
         try:
             data = in_q.get()
             i += 1
@@ -483,7 +488,7 @@ def consumer(in_q, r_q):
 # a thread that opens the gate
 
 
-def opener(q_opener):
+def opener(q_opener, q_wd):
     while True:
         try:
             data = q_opener.get()
@@ -496,7 +501,7 @@ def opener(q_opener):
 # a thread that sends the data over web api
 
 
-def sender(q_sender):
+def sender(q_sender, q_wd):
     while True:
         try:
             data = q_sender.get()
@@ -504,6 +509,50 @@ def sender(q_sender):
             uhfsender.postStadionUhfCards(data)
         except:
             os._exit(1)
+
+
+def watchdog(q_wd):
+    is_sender_alive = False
+    is_opener_alive = False
+    is_consumer_alive = False
+    is_producer_alive = False
+    counter = 100
+
+    while True:
+        # watchdog will exit if every 1sec every thread don't send alive signal
+        counter -= 1
+        time.sleep(0.025)
+
+        print(counter)
+
+        if counter < 0:
+            if is_sender_alive is True and is_opener_alive is True and is_consumer_alive is True and is_producer_alive is True:
+                is_sender_alive = False
+                is_opener_alive = False
+                is_consumer_alive = False
+                is_producer_alive = False
+            else:
+                print("Process killed by watchdog!!")
+                os._exit(1)
+            counter = 100
+        try:
+            data = q_wd.get(False)
+            print('two')
+            if data == "sender_alive":
+                print("SENDER alive")
+                is_sender_alive = True
+            elif data == "opener_alive":
+                print("OPENER alive")
+                is_opener_alive = True
+            elif data == "consumer_alive":
+                print("CONSUMER alive")
+                is_consumer_alive = True
+            elif data == "producer_alive":
+                print("PRODUCER alive")
+                is_producer_alive = True
+        except:
+            pass
+
 
 if __name__ == '__main__':
     reader = UHFReader(UHF_READER_ADDRESS, UHF_READER_PORT)
@@ -534,15 +583,19 @@ if __name__ == '__main__':
         r_q = Queue()
         q_opener = Queue()
         q_sender = Queue()
-        t1 = Thread(target=producer, args=(q, r_q, q_opener, q_sender, reader))
-        t2 = Thread(target=consumer, args=(q, r_q))
-        t3 = Thread(target=opener, args=(q_opener, ))
-        t4 = Thread(target=sender, args=(q_sender, ))
+        q_wd = Queue()
+        t1 = Thread(target=producer, args=(
+            q, r_q, q_opener, q_sender, q_wd, reader))
+        t2 = Thread(target=consumer, args=(q, r_q, q_wd))
+        t3 = Thread(target=opener, args=(q_opener, q_wd))
+        t4 = Thread(target=sender, args=(q_sender, q_wd))
+        t5 = Thread(target=watchdog, args=(q_wd, ))
 
         t1.start()
         t2.start()
         t3.start()
         t4.start()
+        t5.start()
 
     except:
         print("EXCEPTION OCCURS!!!")
