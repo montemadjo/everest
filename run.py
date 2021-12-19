@@ -280,7 +280,7 @@ def producer(out_q, r_q, q_opener, q_sender, q_wd, reader):
             #     reader.blink_output2()
 
         # counter expired.
-        if reader.count == 0:
+        if reader.count < 0:
             reader.count = 200
             reader.count_locker = True
             # simplecount = 200
@@ -331,7 +331,7 @@ def producer(out_q, r_q, q_opener, q_sender, q_wd, reader):
             # simpleflag_employee = False
             simplevehicles = []
 
-        if simplecount == 0:
+        if simplecount < 0:
             simplecount = 200
             # reader.count = 200
             # reader.count_locker = True
@@ -473,6 +473,9 @@ def consumer(in_q, r_q, q_wd):
                 elif reply == 'SIMPLEVEHICLE card found, simpleemployee needed!':
                     data["command"] = "SIMPLEVEHICLE NEED SIMPLEEMPLOYEE"
                     r_q.put(data)
+            else:
+                data["command"] = "CARD MASKED"
+                r_q.put(data)
 
             now = datetime.now()
 
@@ -510,23 +513,23 @@ def sender(q_sender, q_wd):
 
 
 def watchdog(q_wd):
-    is_sender_alive = False
-    is_opener_alive = False
-    is_consumer_alive = False
+    # is_sender_alive = False
+    # is_opener_alive = False
+    # is_consumer_alive = False
     is_producer_alive = False
     counter = 100
 
     while True:
         # watchdog will exit if every 1sec every thread don't send alive signal
         counter -= 1
-        time.sleep(0.025)
+        time.sleep(0.1)
 
         if counter < 0:
             # and is_opener_alive is True and is_consumer_alive is True and is_sender_alive is True:
             if is_producer_alive is True:
-                is_sender_alive = False
-                is_opener_alive = False
-                is_consumer_alive = False
+                # is_sender_alive = False
+                # is_opener_alive = False
+                # is_consumer_alive = False
                 is_producer_alive = False
             else:
                 print("Process killed by watchdog!!")
@@ -536,13 +539,13 @@ def watchdog(q_wd):
             data = q_wd.get(False)
             if data == "sender_alive":
                 print("SENDER alive")
-                is_sender_alive = True
+                # is_sender_alive = True
             elif data == "opener_alive":
                 print("OPENER alive")
-                is_opener_alive = True
+                # is_opener_alive = True
             elif data == "consumer_alive":
                 print("CONSUMER alive")
-                is_consumer_alive = True
+                # is_consumer_alive = True
             elif data == "producer_alive":
                 # print("PRODUCER alive")
                 is_producer_alive = True
