@@ -509,7 +509,8 @@ def sender(q_sender, q_wd):
             print(f"send to wep api: {data}")
             uhfsender.postStadionUhfCards(data)
         except:
-            os._exit(1)
+            # os._exit(1)
+            print("drop exit!")
 
 
 def watchdog(q_wd):
